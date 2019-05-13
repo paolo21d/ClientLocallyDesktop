@@ -1,26 +1,38 @@
 package pckLocallyDesktop;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.*;
 
 public class Communication {
+    private final int communicationPort = 10000;
+    private final int communicationPortTCP = 10001;
+    //musi byc na odwrot receivePort i sendPort niz w aplikacji servera
+    private final int sendPort = 10003;
+    private final int receivePort = 10002;
+    SendThread sendThread;
+    ReceiveThread receiveThread;
+
+
     byte[] sendData = new byte[1024];
     byte[] receiveData = new byte[1024];
-    BufferedReader inFromUser;
+    //BufferedReader inFromUser;
     DatagramSocket udpSocket;
     InetAddress IPAddress;
     DatagramPacket receivePacket;
     DatagramPacket sendPacket;
     ////
-    Socket clientSocket;
+    /*Socket clientSocket;
     PrintWriter out;
-    BufferedReader in;
-    private int communicationPort = 10000;
-    private int communicationPortTCP = 10001;
+    BufferedReader in;*/
+
 
     public Communication() {
-        inFromUser = new BufferedReader(new InputStreamReader(System.in));
-
+        //inFromUser = new BufferedReader(new InputStreamReader(System.in));
+        sendThread = new SendThread();
+        receiveThread = new ReceiveThread();
         try {
             udpSocket = new DatagramSocket();
             IPAddress = InetAddress.getByName(getBroadcast());
@@ -31,7 +43,7 @@ public class Communication {
         }
     }
 
-    public boolean connect() throws Exception {
+    public boolean initConnection() throws IOException {
         System.out.println("Communication thread start");
 
         String sentence = new String("INIT_CONNECTION");
@@ -46,44 +58,71 @@ public class Communication {
         System.out.println("FROM SERVER: " + modifiedSentence);
         System.out.println(IPAddress);
         udpSocket.close();
-
-        // create TCP connection
-        clientSocket = new Socket(IPAddress, communicationPortTCP);
-        System.out.println("Connected");
-        out = new PrintWriter(clientSocket.getOutputStream(), true);
-        in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-
-
         return true;
     }
 
-    private void sendDataUDP(String msg) throws Exception {
-        ByteArrayOutputStream bStream = new ByteArrayOutputStream();
-        ObjectOutput oo = new ObjectOutputStream(bStream);
-        oo.writeObject(msg);
-        oo.close();
-        byte[] serializedMessage = bStream.toByteArray();
-        sendData = serializedMessage;
+    public void TCPConnection() throws InterruptedException {
+        ///TCP
+        sendThread.start();
+        receiveThread.start();
 
-        //sendDataUDP = sentence.getBytes();
-        sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, communicationPort);
-        udpSocket.send(sendPacket);
+        //sendThread.join();
+        //receiveThread.join();
     }
 
-    private String receiveDataUDP() throws Exception {
-        udpSocket.receive(receivePacket);
-        ObjectInputStream iStream = null;
-        String messageStr = null;
-        iStream = new ObjectInputStream(new ByteArrayInputStream(receivePacket.getData()));
-        messageStr = (String) iStream.readObject();
-        iStream.close();
+//    public boolean connect() throws Exception {
+//        System.out.println("Communication thread start");
+//
+//        String sentence = new String("INIT_CONNECTION");
+//        sendData = sentence.getBytes();
+//        sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, communicationPort);
+//        udpSocket.send(sendPacket);
+//        receivePacket = new DatagramPacket(receiveData, receiveData.length);
+//        udpSocket.receive(receivePacket);
+//        IPAddress = receivePacket.getAddress();
+//
+//        String modifiedSentence = new String(receivePacket.getData());
+//        System.out.println("FROM SERVER: " + modifiedSentence);
+//        System.out.println(IPAddress);
+//        udpSocket.close();
+//
+//        // create TCP connection
+//        clientSocket = new Socket(IPAddress, communicationPortTCP);
+//        System.out.println("Connected");
+//        out = new PrintWriter(clientSocket.getOutputStream(), true);
+//        in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+//
+//
+//        return true;
+//    }
 
-        return messageStr;
-    }
+//    private void sendDataUDP(String msg) throws Exception {
+//        ByteArrayOutputStream bStream = new ByteArrayOutputStream();
+//        ObjectOutput oo = new ObjectOutputStream(bStream);
+//        oo.writeObject(msg);
+//        oo.close();
+//        byte[] serializedMessage = bStream.toByteArray();
+//        sendData = serializedMessage;
+//
+//        //sendDataUDP = sentence.getBytes();
+//        sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, communicationPort);
+//        udpSocket.send(sendPacket);
+//    }
 
-    private void sendDataTCP(String msg) {
-        out.println(msg);
-    }
+//    private String receiveDataUDP() throws Exception {
+//        udpSocket.receive(receivePacket);
+//        ObjectInputStream iStream = null;
+//        String messageStr = null;
+//        iStream = new ObjectInputStream(new ByteArrayInputStream(receivePacket.getData()));
+//        messageStr = (String) iStream.readObject();
+//        iStream.close();
+//
+//        return messageStr;
+//    }
+//
+//    private void sendDataTCP(String msg) {
+//        out.println(msg);
+//    }
 
     private String getBroadcast() throws UnknownHostException, SocketException {
         InetAddress IP = InetAddress.getLocalHost();
@@ -124,15 +163,85 @@ public class Communication {
     //////////////////////////////
     public void comPlay() throws Exception {
         //sendDataUDP("1");
-        sendDataTCP("Command:PLAY");
+        //sendDataTCP("Command:PLAY");
+        //sendThread.send("Command:PLAY");
+        sendThread.message = "Command:PLAY";
     }
 
     public void comPause() throws Exception {
         //sendDataUDP("2");
-        sendDataTCP("Command:PAUSE");
+        //sendDataTCP("Command:PAUSE");
+        //sendThread.send("Command:PAUSE");
+        sendThread.message = "Command:PAUSE";
     }
 
-    public void closeCommunication() {
-        udpSocket.close();
+//    public void closeCommunication() {
+//        udpSocket.close();
+//    }
+
+
+    class SendThread extends Thread {
+        boolean keepConnect = true;
+        private Socket clientSocket;
+        private PrintWriter out;
+        public String message="";
+
+        public void run() {
+            try {
+                clientSocket = new Socket(IPAddress, sendPort);
+                System.out.println("Connected send");
+                out = new PrintWriter(clientSocket.getOutputStream(), true);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+
+            while (keepConnect) {
+                if(!message.equals("")){
+                    send(message);
+                    message = "";
+                }
+            }
+        }
+
+        public void send(String msg) {
+            System.out.println("Wysylam - IN PROGRESS");
+            out.println(msg);
+            System.out.println("Wyslano - DONE");
+        }
+    }
+
+    class ReceiveThread extends Thread {
+        boolean keepConnect = true;
+        String message;
+        private Socket clientSocket;
+        private BufferedReader in;
+
+        public void run() {
+            try {
+                clientSocket = new Socket(IPAddress, receivePort);
+                System.out.println("Connected receive");
+                in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            while (keepConnect) {
+
+            }
+        }
+
+        public String receive() {
+            String msg = "";
+            try {
+                msg = in.readLine();
+            } catch (SocketException e) {
+                System.out.println("Connection lost...");
+                return null;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return msg;
+        }
     }
 }

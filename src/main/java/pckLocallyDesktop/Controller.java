@@ -22,9 +22,11 @@ public class Controller {
     @FXML
     void connectButtonClick(ActionEvent event) {
         try {
-            connected = communication.connect();
+            //connected = communication.connect();
+            connected = communication.initConnection();
             if(connected){
                 labelConnection.setText("Connected");
+                communication.TCPConnection();
             }else{
                 labelConnection.setText("NOT Connected");
             }
