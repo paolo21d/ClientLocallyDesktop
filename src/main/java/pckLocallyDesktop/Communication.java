@@ -1,5 +1,7 @@
 package pckLocallyDesktop;
 
+import com.google.gson.Gson;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -14,7 +16,9 @@ public class Communication {
     private final int receivePort = 10002;
     SendThread sendThread;
     ReceiveThread receiveThread;
-
+    PlayerStatus status;
+    Controller controller;
+    boolean keepConnect = true;
 
     byte[] sendData = new byte[1024];
     byte[] receiveData = new byte[1024];
@@ -29,7 +33,8 @@ public class Communication {
     BufferedReader in;*/
 
 
-    public Communication() {
+    public Communication(Controller c) {
+        controller = c;
         //inFromUser = new BufferedReader(new InputStreamReader(System.in));
         sendThread = new SendThread();
         receiveThread = new ReceiveThread();
@@ -161,30 +166,38 @@ public class Communication {
     }
 
     //////////////////////////////
-    public void comPlay() throws Exception {
+    public void comPlayPause() throws Exception {
         //sendDataUDP("1");
         //sendDataTCP("Command:PLAY");
         //sendThread.send("Command:PLAY");
-        sendThread.message = "Command:PLAY";
+        sendThread.message = "Command:PLAYPAUSE";
     }
 
-    public void comPause() throws Exception {
-        //sendDataUDP("2");
-        //sendDataTCP("Command:PAUSE");
-        //sendThread.send("Command:PAUSE");
-        sendThread.message = "Command:PAUSE";
+    public void comNext() {
+        sendThread.message = "Command:NEXT";
     }
 
+    public void comPrev() {
+        sendThread.message = "Command:PREV";
+    }
+
+    public void comReplay() {
+        sendThread.message = "Command:REPLAY";
+    }
+
+    public void comLoop() {
+        sendThread.message = "Command:LOOP";
+    }
 //    public void closeCommunication() {
 //        udpSocket.close();
 //    }
 
 
     class SendThread extends Thread {
-        boolean keepConnect = true;
+        public String message = "";
+        //boolean keepConnect = true;
         private Socket clientSocket;
         private PrintWriter out;
-        public String message="";
 
         public void run() {
             try {
@@ -197,7 +210,7 @@ public class Communication {
 
 
             while (keepConnect) {
-                if(!message.equals("")){
+                if (!message.equals("")) {
                     send(message);
                     message = "";
                 }
@@ -212,7 +225,7 @@ public class Communication {
     }
 
     class ReceiveThread extends Thread {
-        boolean keepConnect = true;
+        //boolean keepConnect = true;
         String message;
         private Socket clientSocket;
         private BufferedReader in;
@@ -227,7 +240,16 @@ public class Communication {
             }
 
             while (keepConnect) {
-
+                message = receive();
+                if (message == null) {
+                    keepConnect = false;
+                    break;
+                }
+                Gson json = new Gson();
+                status = json.fromJson(message, PlayerStatus.class);
+                if (status != null)
+                    controller.refreshInfo(status);
+                //System.out.println(status.path);
             }
         }
 

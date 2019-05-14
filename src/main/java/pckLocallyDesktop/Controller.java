@@ -1,56 +1,89 @@
 package pckLocallyDesktop;
 
 import javafx.event.ActionEvent;
-import javafx.fxml.FXML;
-import javafx.scene.control.Button;
+import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
+import javafx.scene.control.Slider;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 
-public class Controller {
-    Communication communication = new Communication();
-    boolean connected=false;
+import java.net.URL;
+import java.util.ResourceBundle;
 
-    @FXML
-    private Label labelInfo;
-    @FXML
-    private Button playButton;
-    @FXML
-    private Button pauseButton;
-    @FXML
-    private Button connectButton;
-    @FXML
-    private Label labelConnection;
-    @FXML
-    void connectButtonClick(ActionEvent event) {
+public class Controller implements Initializable {
+    public ImageView playPauseImage;
+    public Label statusLabel;
+    public ImageView loopImage;
+    public Slider timeSlider;
+    public Slider volumeSlider;
+    public ImageView connectImage;
+
+    Communication communication = new Communication(this);
+    boolean connected = false;
+
+    public void connectButtonClicked(ActionEvent event) {
         try {
             //connected = communication.connect();
             connected = communication.initConnection();
-            if(connected){
-                labelConnection.setText("Connected");
+            if (connected) {
+                statusLabel.setText("Connected");
                 communication.TCPConnection();
-            }else{
-                labelConnection.setText("NOT Connected");
+            } else {
+                statusLabel.setText("NOT Connected");
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    @FXML
-    void pauseButtonClick(ActionEvent event) {
+    public void playPauseButtonClicked(ActionEvent event) {
         try {
-            communication.comPause();
+            communication.comPlayPause();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    @FXML
-    void playButtonClick(ActionEvent event) {
-        try {
-            communication.comPlay();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public void nextButtonClicked(ActionEvent actionEvent) {
+        if (connected)
+            communication.comNext();
     }
 
+    public void prevButtonClicked(ActionEvent actionEvent) {
+        if (connected)
+            communication.comPrev();
+    }
+
+    public void loopButtonClicked(ActionEvent actionEvent) {
+        if (connected)
+            communication.comLoop();
+    }
+
+    public void replayButtonClicked(ActionEvent actionEvent) {
+        if (connected)
+            communication.comReplay();
+    }
+
+    public void refreshInfo(PlayerStatus status) {
+        if(status.played){
+            playPauseImage.setImage(new Image("/icons/play.png"));
+        }if(status.paused){
+            playPauseImage.setImage(new Image("/icons/pause.png"));
+        }
+
+        if(status.loopType == PlayerStatus.LoopType.RepeatAll){
+            loopImage.setImage(new Image("/icons/repeatAll.png"));
+        }else if(status.loopType == PlayerStatus.LoopType.RepeatOne){
+            loopImage.setImage(new Image("/icons/repeatOne.png"));
+        }else if(status.loopType == PlayerStatus.LoopType.Random){
+            loopImage.setImage(new Image("/icons/random.png"));
+        }
+
+        statusLabel.setText(status.title);
+    }
+
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+
+    }
 }
