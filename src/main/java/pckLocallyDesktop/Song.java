@@ -3,41 +3,41 @@ package pckLocallyDesktop;
 import javafx.beans.property.SimpleStringProperty;
 
 public class Song {
-    private SimpleStringProperty songName;
-    private SimpleStringProperty songTime;
-    private SimpleStringProperty songPath;
+    private String songName;
+    private String songTime;
+    private String songPath;
 
     public Song(String name, String time){
-        songName= new SimpleStringProperty(name);
-        songTime= new SimpleStringProperty(time);
+        songName= name;
+        songTime= time;
     }
     public Song(String name, String time, String path){
-        songName= new SimpleStringProperty(name);
-        songTime= new SimpleStringProperty(time);
-        songPath=new SimpleStringProperty(path);
+        songName= name;
+        songTime= time;
+        songPath= path;
     }
 
     public String getSongName() {
-        return songName.get();
+        return songName;
     }
 
     public void setSongName(String songName) {
-        this.songName = new SimpleStringProperty(songName);
+        this.songName = songName;
     }
 
     public String getSongTime() {
-        return songTime.get();
+        return songTime;
     }
 
     public void setSongTime(String songTime) {
-        this.songTime = new SimpleStringProperty(songTime);
+        this.songTime = songTime;
     }
 
     public String getSongPath() {
-        return songPath.get();
+        return songPath;
     }
 
     public void setSongPath(String songPath) {
-        this.songPath = new SimpleStringProperty(songPath);
+        this.songPath = songPath;
     }
 }
