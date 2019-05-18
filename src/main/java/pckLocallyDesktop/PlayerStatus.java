@@ -13,6 +13,7 @@ public class PlayerStatus {
     public String path;
     public String title;
     public LoopType loopType = LoopType.RepeatAll;
+    public double rate =1;
 
     public enum LoopType {
         RepeatAll, RepeatOne, Random;

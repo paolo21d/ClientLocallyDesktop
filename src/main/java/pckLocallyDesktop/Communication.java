@@ -19,6 +19,7 @@ public class Communication {
     PlayerStatus status;
     Controller controller;
     boolean keepConnect = true;
+    Gson json = new Gson();
 
     byte[] sendData = new byte[1024];
     byte[] receiveData = new byte[1024];
@@ -170,30 +171,44 @@ public class Communication {
         //sendDataUDP("1");
         //sendDataTCP("Command:PLAY");
         //sendThread.send("Command:PLAY");
-        sendThread.message = "Command:PLAYPAUSE";
+//        sendThread.message = "Command:PLAYPAUSE";
+        Message message = new Message(MessageType.PLAYPAUSE);
+        sendThread.message = json.toJson(message);
     }
 
     public void comNext() {
-        sendThread.message = "Command:NEXT";
+//        sendThread.message = "Command:NEXT";
+        Message message = new Message(MessageType.NEXT);
+        sendThread.message = json.toJson(message);
     }
 
     public void comPrev() {
-        sendThread.message = "Command:PREV";
+//        sendThread.message = "Command:PREV";
+        Message message = new Message(MessageType.PREV);
+        sendThread.message = json.toJson(message);
     }
 
     public void comReplay() {
-        sendThread.message = "Command:REPLAY";
+//        sendThread.message = "Command:REPLAY";
+        Message message = new Message(MessageType.REPLAY);
+        sendThread.message = json.toJson(message);
     }
 
     public void comLoop() {
-        sendThread.message = "Command:LOOP";
+        //sendThread.message = "Command:LOOP";
+        Message message = new Message(MessageType.LOOP);
+        sendThread.message = json.toJson(message);
     }
 //    public void closeCommunication() {
 //        udpSocket.close();
 //    }
 
 
-    class SendThread extends Thread {
+    public enum MessageType {
+        PLAYPAUSE, NEXT, PREV, REPLAY, LOOP, STATUS
+    }
+
+    class SendThread extends Thread { //TODO mozna przerobi zeby po wyslaniu sie usypial a jak sie chce wyslac to budzic do signalem
         public String message = "";
         //boolean keepConnect = true;
         private Socket clientSocket;
@@ -226,7 +241,7 @@ public class Communication {
 
     class ReceiveThread extends Thread {
         //boolean keepConnect = true;
-        String message;
+        String msg;
         private Socket clientSocket;
         private BufferedReader in;
 
@@ -240,15 +255,19 @@ public class Communication {
             }
 
             while (keepConnect) {
-                message = receive();
-                if (message == null) {
+                msg = receive();
+                if (msg == null) {
                     keepConnect = false;
                     break;
                 }
                 Gson json = new Gson();
-                status = json.fromJson(message, PlayerStatus.class);
-                if (status != null)
-                    controller.refreshInfo(status);
+                //status = json.fromJson(message, PlayerStatus.class);
+                Message message = json.fromJson(msg, Message.class);
+                if (message != null && message.messageType == MessageType.STATUS) {
+                    controller.refreshInfo(message.statusMessage);
+                }
+//                if (status != null)
+//                    controller.refreshInfo(status);
                 //System.out.println(status.path);
             }
         }
@@ -264,6 +283,21 @@ public class Communication {
                 e.printStackTrace();
             }
             return msg;
+        }
+    }
+
+    public class Message {
+        MessageType messageType;
+        String message;
+        PlayerStatus statusMessage;
+
+        public Message(MessageType type, PlayerStatus st) {
+            messageType = type;
+            statusMessage = st;
+        }
+
+        public Message(MessageType type) {
+            messageType = type;
         }
     }
 }
