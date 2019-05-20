@@ -48,7 +48,7 @@
     -fx-background-color: #074678;
 }
 
-#statusLabel{
+#statusLabel, #volumeLabel{
     -fx-text-fill: #ffffff;
 }
 .slider{

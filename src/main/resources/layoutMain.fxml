@@ -26,7 +26,7 @@
                                 </ImageView>
                             </graphic>
                         </Button>
-                        <Button fx:id="connectButton" layoutX="41.0" layoutY="241.0" mnemonicParsing="false" onAction="#connectButtonClicked" prefHeight="45.0" prefWidth="91.0" styleClass="additionalButton">
+                        <Button fx:id="connectButton" layoutX="41.0" layoutY="239.0" mnemonicParsing="false" onAction="#connectButtonClicked" prefHeight="45.0" prefWidth="91.0" styleClass="additionalButton">
                             <graphic>
                                 <ImageView fx:id="connectImage" fitHeight="36.0" fitWidth="36.0" pickOnBounds="true" preserveRatio="true">
                                     <image>
@@ -72,15 +72,15 @@
                                 </ImageView>
                             </graphic>
                         </Button>
-                        <Slider fx:id="timeSlider" layoutX="14.0" layoutY="169.0" />
-                        <Slider fx:id="volumeSlider" layoutX="14.0" layoutY="207.0" />
+                        <Slider fx:id="volumeSlider" layoutX="16.0" layoutY="180.0" />
+                        <Label fx:id="volumeLabel" layoutX="66.0" layoutY="163.0" text="Volume" />
                     </children>
                 </AnchorPane>
                 <AnchorPane fx:id="tablePane">
                     <children>
-                        <TableView fx:id="tableView" layoutX="-5.0" layoutY="3.0" prefHeight="300.0" prefWidth="172.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                        <TableView fx:id="tableView" layoutX="-5.0" layoutY="3.0" onMouseClicked="#tableClicked" prefHeight="300.0" prefWidth="172.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                             <columns>
-                                <TableColumn fx:id="nameColumn" maxWidth="-1.0" minWidth="170.0" prefWidth="-1.0" text="Name" />
+                                <TableColumn fx:id="SongColumn" maxWidth="-1.0" minWidth="170.0" prefWidth="-1.0" text="Title" />
                             </columns>
                         </TableView>
                     </children>

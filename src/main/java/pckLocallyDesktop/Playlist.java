@@ -3,6 +3,10 @@ package pckLocallyDesktop;
 import java.util.ArrayList;
 
 public class Playlist {
+    public ArrayList<Song> getSongs() {
+        return songs;
+    }
+
     private ArrayList<Song> songs;
     private String plName;
     private int songsAmount = 0;

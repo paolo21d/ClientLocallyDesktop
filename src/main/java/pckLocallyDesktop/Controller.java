@@ -1,11 +1,17 @@
 package pckLocallyDesktop;
 
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -13,10 +19,15 @@ import java.util.ResourceBundle;
 public class Controller implements Initializable {
     public ImageView playPauseImage;
     public Label statusLabel;
+    public Label volumeLabel;
     public ImageView loopImage;
     public Slider timeSlider;
     public Slider volumeSlider;
     public ImageView connectImage;
+
+    public TableColumn<SongTable, String> SongColumn;
+    public TableView<SongTable> tableView;
+
 
     Communication communication = new Communication(this);
     boolean connected = false;
@@ -65,10 +76,13 @@ public class Controller implements Initializable {
     }
 
     public void refreshInfo(PlayerStatus status) {
+        //TODO napisac odswiezanie paska timeSlider & volumeSlider
+        //System.out.println(status.played+" "+status.paused+" "+status.loopType);
+        volumeSlider.setValue(status.volumeValue*100);
         if(status.played){
-            playPauseImage.setImage(new Image("/icons/play.png"));
-        }if(status.paused){
             playPauseImage.setImage(new Image("/icons/pause.png"));
+        }if(status.paused){
+            playPauseImage.setImage(new Image("/icons/play.png"));
         }
 
         if(status.loopType == PlayerStatus.LoopType.RepeatAll){
@@ -79,11 +93,39 @@ public class Controller implements Initializable {
             loopImage.setImage(new Image("/icons/random.png"));
         }
 
+        tableView.getItems().clear();
+        for(Song s:status.currentPlaylist.getSongs()){
+            tableView.getItems().add(new SongTable(s));
+        }
+
         statusLabel.setText(status.title);
+
+        System.out.println(status.volumeValue*100);
     }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        SongColumn.setCellValueFactory(new PropertyValueFactory<SongTable, String>("SongName"));
+        volumeSlider.setValue(100);
 
+        volumeSlider.valueProperty().addListener(new InvalidationListener() {
+            public void invalidated(Observable observable) {
+                if (volumeSlider.isPressed() && connected) {
+                    communication.comSetVolume(volumeSlider.getValue());
+                }
+            }
+        });
+    }
+
+    public void tableClicked(MouseEvent mouseEvent) {
+        if (mouseEvent.getClickCount() == 2) {
+            String title = tableView.getSelectionModel().getSelectedItem().getSongName();
+            String time = tableView.getSelectionModel().getSelectedItem().getSongTime();
+            String path = tableView.getSelectionModel().getSelectedItem().getSongPath();
+            System.out.println(title);
+
+            Song song = new Song(time, time, path);
+            communication.comSetSong(song);
+        }
     }
 }
