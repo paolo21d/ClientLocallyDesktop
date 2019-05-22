@@ -4,16 +4,14 @@ import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Label;
-import javafx.scene.control.Slider;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 
 import java.net.URL;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 public class Controller implements Initializable {
@@ -33,6 +31,20 @@ public class Controller implements Initializable {
     boolean connected = false;
 
     public void connectButtonClicked(ActionEvent event) {
+        TextInputDialog dialog = new TextInputDialog("");
+        dialog.setTitle("To connect input PIN");
+        dialog.setHeaderText("PIN has 4 digits");
+        dialog.setContentText("Enter PIN:");
+        Optional<String> result = dialog.showAndWait();
+        if (result.isPresent()){
+            System.out.println("Your name: " + result.get());
+            String pin = result.get();
+            if(pin.length() != 4) return;
+            communication.setPin(pin);
+        }else {
+            return;
+        }
+
         try {
             //connected = communication.connect();
             connected = communication.initConnection();

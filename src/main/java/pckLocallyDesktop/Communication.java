@@ -20,7 +20,6 @@ public class Communication {
     Controller controller;
     boolean keepConnect = true;
     Gson json = new Gson();
-
     byte[] sendData = new byte[1024];
     byte[] receiveData = new byte[1024];
     //BufferedReader inFromUser;
@@ -28,31 +27,33 @@ public class Communication {
     InetAddress IPAddress;
     DatagramPacket receivePacket;
     DatagramPacket sendPacket;
-    ////
-    /*Socket clientSocket;
-    PrintWriter out;
-    BufferedReader in;*/
-
+    private String pin;
 
     public Communication(Controller c) {
         controller = c;
         //inFromUser = new BufferedReader(new InputStreamReader(System.in));
         sendThread = new SendThread();
         receiveThread = new ReceiveThread();
-        try {
-            udpSocket = new DatagramSocket();
-            IPAddress = InetAddress.getByName(getBroadcast());
-        } catch (SocketException e) {
-            e.printStackTrace();
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        }
+    }
+
+    public String getPin() {
+        return pin;
+    }
+
+    public void setPin(String pin) {
+        this.pin = pin;
     }
 
     public boolean initConnection() throws IOException {
         System.out.println("Communication thread start");
+        try {
+            udpSocket = new DatagramSocket();
+            IPAddress = InetAddress.getByName(getBroadcast());
+        } catch (SocketException | UnknownHostException e) {
+            e.printStackTrace();
+        }
 
-        String sentence = new String("INIT_CONNECTION");
+        String sentence = pin;
         sendData = sentence.getBytes();
         sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, communicationPort);
         udpSocket.send(sendPacket);
@@ -64,7 +65,10 @@ public class Communication {
         System.out.println("FROM SERVER: " + modifiedSentence);
         System.out.println(IPAddress);
         udpSocket.close();
-        return true;
+        if (modifiedSentence.equals("NOCONNECTION"))
+            return false;
+        else
+            return true;
     }
 
     public void TCPConnection() throws InterruptedException {
@@ -75,60 +79,6 @@ public class Communication {
         //sendThread.join();
         //receiveThread.join();
     }
-
-//    public boolean connect() throws Exception {
-//        System.out.println("Communication thread start");
-//
-//        String sentence = new String("INIT_CONNECTION");
-//        sendData = sentence.getBytes();
-//        sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, communicationPort);
-//        udpSocket.send(sendPacket);
-//        receivePacket = new DatagramPacket(receiveData, receiveData.length);
-//        udpSocket.receive(receivePacket);
-//        IPAddress = receivePacket.getAddress();
-//
-//        String modifiedSentence = new String(receivePacket.getData());
-//        System.out.println("FROM SERVER: " + modifiedSentence);
-//        System.out.println(IPAddress);
-//        udpSocket.close();
-//
-//        // create TCP connection
-//        clientSocket = new Socket(IPAddress, communicationPortTCP);
-//        System.out.println("Connected");
-//        out = new PrintWriter(clientSocket.getOutputStream(), true);
-//        in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-//
-//
-//        return true;
-//    }
-
-//    private void sendDataUDP(String msg) throws Exception {
-//        ByteArrayOutputStream bStream = new ByteArrayOutputStream();
-//        ObjectOutput oo = new ObjectOutputStream(bStream);
-//        oo.writeObject(msg);
-//        oo.close();
-//        byte[] serializedMessage = bStream.toByteArray();
-//        sendData = serializedMessage;
-//
-//        //sendDataUDP = sentence.getBytes();
-//        sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, communicationPort);
-//        udpSocket.send(sendPacket);
-//    }
-
-//    private String receiveDataUDP() throws Exception {
-//        udpSocket.receive(receivePacket);
-//        ObjectInputStream iStream = null;
-//        String messageStr = null;
-//        iStream = new ObjectInputStream(new ByteArrayInputStream(receivePacket.getData()));
-//        messageStr = (String) iStream.readObject();
-//        iStream.close();
-//
-//        return messageStr;
-//    }
-//
-//    private void sendDataTCP(String msg) {
-//        out.println(msg);
-//    }
 
     private String getBroadcast() throws UnknownHostException, SocketException {
         InetAddress IP = InetAddress.getLocalHost();
@@ -168,34 +118,26 @@ public class Communication {
 
     //////////////////////////////
     public void comPlayPause() throws Exception {
-        //sendDataUDP("1");
-        //sendDataTCP("Command:PLAY");
-        //sendThread.send("Command:PLAY");
-//        sendThread.message = "Command:PLAYPAUSE";
         Message message = new Message(MessageType.PLAYPAUSE);
         sendThread.message = json.toJson(message);
     }
 
     public void comNext() {
-//        sendThread.message = "Command:NEXT";
         Message message = new Message(MessageType.NEXT);
         sendThread.message = json.toJson(message);
     }
 
     public void comPrev() {
-//        sendThread.message = "Command:PREV";
         Message message = new Message(MessageType.PREV);
         sendThread.message = json.toJson(message);
     }
 
     public void comReplay() {
-//        sendThread.message = "Command:REPLAY";
         Message message = new Message(MessageType.REPLAY);
         sendThread.message = json.toJson(message);
     }
 
     public void comLoop() {
-        //sendThread.message = "Command:LOOP";
         Message message = new Message(MessageType.LOOP);
         sendThread.message = json.toJson(message);
     }
@@ -215,13 +157,13 @@ public class Communication {
         sendThread.message = json.toJson(message);
     }
 
-    public void comSetSong(Song song){
+    public void comSetSong(Song song) {
         Message message = new Message(MessageType.SETSONG);
         message.song = song;
         sendThread.message = json.toJson(message);
     }
 
-    public void comSetVolume(Double volume){
+    public void comSetVolume(Double volume) {
         Message message = new Message(MessageType.SETVOLUME);
         message.volValue = volume;
         sendThread.message = json.toJson(message);
