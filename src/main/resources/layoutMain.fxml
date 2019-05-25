@@ -80,7 +80,7 @@
                     <children>
                         <TableView fx:id="tableView" layoutX="-5.0" layoutY="3.0" onMouseClicked="#tableClicked" prefHeight="300.0" prefWidth="172.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                             <columns>
-                                <TableColumn fx:id="SongColumn" maxWidth="-1.0" minWidth="170.0" prefWidth="-1.0" text="Title" />
+                                <TableColumn fx:id="SongColumn" editable="false" maxWidth="-1.0" minWidth="170.0" prefWidth="-1.0" sortable="false" text="Title" />
                             </columns>
                         </TableView>
                     </children>

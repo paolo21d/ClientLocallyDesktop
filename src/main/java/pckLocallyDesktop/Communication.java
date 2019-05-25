@@ -51,6 +51,7 @@ public class Communication {
             IPAddress = InetAddress.getByName(getBroadcast());
         } catch (SocketException | UnknownHostException e) {
             e.printStackTrace();
+            udpSocket.close();
         }
 
         String sentence = pin;
@@ -62,6 +63,7 @@ public class Communication {
         try{
             udpSocket.receive(receivePacket);
         }catch(SocketTimeoutException e){
+            udpSocket.close();
             return false;
         }
         IPAddress = receivePacket.getAddress();
@@ -148,20 +150,20 @@ public class Communication {
         sendThread.message = json.toJson(message);
     }
 
-    public void comVolMute() {
-        Message message = new Message(MessageType.VOLMUTE);
-        sendThread.message = json.toJson(message);
-    }
-
-    public void comVolDown() {
-        Message message = new Message(MessageType.VOLDOWN);
-        sendThread.message = json.toJson(message);
-    }
-
-    public void comVolUp() {
-        Message message = new Message(MessageType.VOLUP);
-        sendThread.message = json.toJson(message);
-    }
+//    public void comVolMute() {
+//        Message message = new Message(MessageType.VOLMUTE);
+//        sendThread.message = json.toJson(message);
+//    }
+//
+//    public void comVolDown() {
+//        Message message = new Message(MessageType.VOLDOWN);
+//        sendThread.message = json.toJson(message);
+//    }
+//
+//    public void comVolUp() {
+//        Message message = new Message(MessageType.VOLUP);
+//        sendThread.message = json.toJson(message);
+//    }
 
     public void comSetSong(Song song) {
         Message message = new Message(MessageType.SETSONG);
@@ -175,6 +177,12 @@ public class Communication {
         sendThread.message = json.toJson(message);
     }
 
+    public void closeCommunication(){
+        if(sendThread!=null)
+            sendThread.close();
+        if(receiveThread!=null)
+            receiveThread.close();
+    }
 
     public enum MessageType {
         PLAYPAUSE, NEXT, PREV, REPLAY, LOOP, STATUS, VOLMUTE, VOLDOWN, VOLUP, SETSONG, SETVOLUME
@@ -208,6 +216,13 @@ public class Communication {
             System.out.println("Wysylam - IN PROGRESS");
             out.println(msg);
             System.out.println("Wyslano - DONE");
+        }
+        public void close(){
+            try {
+                clientSocket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -256,6 +271,13 @@ public class Communication {
                 e.printStackTrace();
             }
             return msg;
+        }
+        public void close(){
+            try {
+                clientSocket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
