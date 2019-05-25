@@ -44,7 +44,7 @@ public class Communication {
         this.pin = pin;
     }
 
-    public boolean initConnection() throws IOException {
+    public boolean initConnection() throws IOException { //main function of communication
         System.out.println("Communication thread start");
         try {
             udpSocket = new DatagramSocket();
@@ -58,14 +58,20 @@ public class Communication {
         sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, communicationPort);
         udpSocket.send(sendPacket);
         receivePacket = new DatagramPacket(receiveData, receiveData.length);
-        udpSocket.receive(receivePacket);
+        udpSocket.setSoTimeout(2000);
+        try{
+            udpSocket.receive(receivePacket);
+        }catch(SocketTimeoutException e){
+            return false;
+        }
         IPAddress = receivePacket.getAddress();
 
         String modifiedSentence = new String(receivePacket.getData());
         System.out.println("FROM SERVER: " + modifiedSentence);
+        modifiedSentence = modifiedSentence.substring(0,7);
         System.out.println(IPAddress);
         udpSocket.close();
-        if (modifiedSentence.equals("NOCONNECTION"))
+        if (modifiedSentence.equals("ERRORCN"))
             return false;
         else
             return true;
