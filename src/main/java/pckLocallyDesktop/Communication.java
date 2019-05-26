@@ -54,7 +54,7 @@ public class Communication {
 
     public boolean initConnection(Controller c) throws IOException { //main function of communication
         controller = c;
-        System.out.println("Communication thread start");
+        System.out.println("Communication init");
         try {
             udpSocket = new DatagramSocket();
             IPAddress = InetAddress.getByName(getBroadcast());
@@ -193,6 +193,17 @@ public class Communication {
             receiveThread.close();
     }
 
+    public void resetCommunication() {
+        sendThread.close();
+        receiveThread.close();
+        sendThread = null;
+        //sendThread = new SendThread();
+        receiveThread = null;
+        //receiveThread = new ReceiveThread();
+        instance=null;
+        instance = new Communication();
+    }
+
     public enum MessageType {
         PLAYPAUSE, NEXT, PREV, REPLAY, LOOP, STATUS, VOLMUTE, VOLDOWN, VOLUP, SETSONG, SETVOLUME
     }
@@ -269,6 +280,8 @@ public class Communication {
 //                    controller.refreshInfo(status);
                 //System.out.println(status.path);
             }
+            //controller.refreshInfo(null);
+            controller.closeCommunication();
         }
 
         public String receive() {
