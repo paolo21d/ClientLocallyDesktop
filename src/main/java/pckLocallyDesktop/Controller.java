@@ -26,8 +26,9 @@ public class Controller implements Initializable {
     public TableColumn<SongTable, String> SongColumn;
     public TableView<SongTable> tableView;
 
-
-    Communication communication = new Communication(this);
+    private Thread updaterLabelThread;
+    LabelRefresher labelRefresher = new LabelRefresher();
+    //Communication communication = new Communication(this);
     boolean connected = false;
 
     public void connectButtonClicked(ActionEvent event) {
@@ -40,19 +41,21 @@ public class Controller implements Initializable {
             System.out.println("Your name: " + result.get());
             String pin = result.get();
             if(pin.length() != 4) return;
-            communication.setPin(pin);
+            Communication.getInstance().setPin(pin);
         }else {
             return;
         }
 
         try {
             //connected = communication.connect();
-            connected = communication.initConnection();
+            connected = Communication.getInstance().initConnection(this);
             if (connected) {
-                statusLabel.setText("Connected");
-                communication.TCPConnection();
+                //statusLabel.setText("Connected");
+                labelRefresher.refresh("Connected");
+                Communication.getInstance().TCPConnection();
             } else {
-                statusLabel.setText("NOT Connected");
+                //statusLabel.setText("NOT Connected");
+                labelRefresher.refresh("NOT Connected");
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -61,7 +64,7 @@ public class Controller implements Initializable {
 
     public void playPauseButtonClicked(ActionEvent event) {
         try {
-            communication.comPlayPause();
+            Communication.getInstance().comPlayPause();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -69,22 +72,22 @@ public class Controller implements Initializable {
 
     public void nextButtonClicked(ActionEvent actionEvent) {
         if (connected)
-            communication.comNext();
+            Communication.getInstance().comNext();
     }
 
     public void prevButtonClicked(ActionEvent actionEvent) {
         if (connected)
-            communication.comPrev();
+            Communication.getInstance().comPrev();
     }
 
     public void loopButtonClicked(ActionEvent actionEvent) {
         if (connected)
-            communication.comLoop();
+            Communication.getInstance().comLoop();
     }
 
     public void replayButtonClicked(ActionEvent actionEvent) {
         if (connected)
-            communication.comReplay();
+            Communication.getInstance().comReplay();
     }
 
     public void refreshInfo(PlayerStatus status) {
@@ -110,7 +113,8 @@ public class Controller implements Initializable {
             tableView.getItems().add(new SongTable(s));
         }
 
-        statusLabel.setText(status.title);
+        //statusLabel.setText(status.title);
+        labelRefresher.refresh(status.title);
 
         System.out.println(status.volumeValue*100);
     }
@@ -123,10 +127,14 @@ public class Controller implements Initializable {
         volumeSlider.valueProperty().addListener(new InvalidationListener() {
             public void invalidated(Observable observable) {
                 if (volumeSlider.isPressed() && connected) {
-                    communication.comSetVolume(volumeSlider.getValue());
+                    Communication.getInstance().comSetVolume(volumeSlider.getValue());
                 }
             }
         });
+
+        statusLabel.textProperty().bind(labelRefresher.messageProperty());
+        updaterLabelThread = new Thread(labelRefresher);
+        updaterLabelThread.start();
     }
 
     public void tableClicked(MouseEvent mouseEvent) {
@@ -137,7 +145,7 @@ public class Controller implements Initializable {
             System.out.println(title);
 
             Song song = new Song(time, time, path);
-            communication.comSetSong(song);
+            Communication.getInstance().comSetSong(song);
         }
     }
 }

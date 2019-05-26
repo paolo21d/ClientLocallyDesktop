@@ -9,8 +9,10 @@ import java.io.PrintWriter;
 import java.net.*;
 
 public class Communication {
+    private static Communication instance = null;
+
     private final int communicationPort = 10000;
-    private final int communicationPortTCP = 10001;
+    //private final int communicationPortTCP = 10001;
     //musi byc na odwrot receivePort i sendPort niz w aplikacji servera
     private final int sendPort = 10003;
     private final int receivePort = 10002;
@@ -29,11 +31,17 @@ public class Communication {
     DatagramPacket sendPacket;
     private String pin;
 
-    public Communication(Controller c) {
-        controller = c;
+    private Communication() {
+        //controller = c;
         //inFromUser = new BufferedReader(new InputStreamReader(System.in));
         sendThread = new SendThread();
         receiveThread = new ReceiveThread();
+    }
+
+    public static Communication getInstance() {
+        if (instance == null)
+            instance = new Communication();
+        return instance;
     }
 
     public String getPin() {
@@ -44,7 +52,8 @@ public class Communication {
         this.pin = pin;
     }
 
-    public boolean initConnection() throws IOException { //main function of communication
+    public boolean initConnection(Controller c) throws IOException { //main function of communication
+        controller = c;
         System.out.println("Communication thread start");
         try {
             udpSocket = new DatagramSocket();
@@ -60,9 +69,9 @@ public class Communication {
         udpSocket.send(sendPacket);
         receivePacket = new DatagramPacket(receiveData, receiveData.length);
         udpSocket.setSoTimeout(2000);
-        try{
+        try {
             udpSocket.receive(receivePacket);
-        }catch(SocketTimeoutException e){
+        } catch (SocketTimeoutException e) {
             udpSocket.close();
             return false;
         }
@@ -70,7 +79,7 @@ public class Communication {
 
         String modifiedSentence = new String(receivePacket.getData());
         System.out.println("FROM SERVER: " + modifiedSentence);
-        modifiedSentence = modifiedSentence.substring(0,7);
+        modifiedSentence = modifiedSentence.substring(0, 7);
         System.out.println(IPAddress);
         udpSocket.close();
         if (modifiedSentence.equals("ERRORCN"))
@@ -177,10 +186,10 @@ public class Communication {
         sendThread.message = json.toJson(message);
     }
 
-    public void closeCommunication(){
-        if(sendThread!=null)
+    public void closeCommunication() {
+        if (sendThread != null)
             sendThread.close();
-        if(receiveThread!=null)
+        if (receiveThread != null)
             receiveThread.close();
     }
 
@@ -217,9 +226,11 @@ public class Communication {
             out.println(msg);
             System.out.println("Wyslano - DONE");
         }
-        public void close(){
+
+        public void close() {
             try {
-                clientSocket.close();
+                if (clientSocket != null)
+                    clientSocket.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -272,9 +283,11 @@ public class Communication {
             }
             return msg;
         }
-        public void close(){
+
+        public void close() {
             try {
-                clientSocket.close();
+                if (clientSocket != null)
+                    clientSocket.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
